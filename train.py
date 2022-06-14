@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser(' Parameters for training')
 parser.add_argument("-p", "--patchSize", required=True, type=int, default=7)
 parser.add_argument("-e", "--epochs", required=True, type=int, default=1000)
 parser.add_argument("-lr", "--learning_rate", required=True, type=float, default=0.00005)
+parser.add_argument("-emb", "--embedding", required=True, type=int, default=128)
 
 args = parser.parse_args()
 
@@ -34,20 +35,20 @@ classes = len(np.unique(y_train))
 h = Input((args.patchSize,args.patchSize,144))
 l = Input((args.patchSize,args.patchSize,1))
 
-h1f = blocks.FilterBlock(12)(h)
-l1f = blocks.FilterBlock(12)(l)
+h1f = blocks.FilterBlock(args.embedding)(h)
+l1f = blocks.FilterBlock(args.embedding)(l)
 
 concat = concatenate([h1f,l1f])
 
 for i in range(3):
-  h1 = blocks.SelfAttention(12)(h1f)
-  l1 = blocks.SelfAttention(12)(l1f)
+  h1 = blocks.SelfAttention(args.embedding)(h1f)
+  l1 = blocks.SelfAttention(args.embedding)(l1f)
 
-  h1 = blocks.CrossAttn.cal(h1,l1,12)
-  l1 = blocks.CrossAttn.cal(l1,h1,12)
+  h1 = blocks.CrossAttn.cal(h1,l1,args.embedding)
+  l1 = blocks.CrossAttn.cal(l1,h1,args.embedding)
 
-  h1_co = blocks.CrossOut(12)(h1)
-  l1_co = blocks.CrossOut(12)(l1)
+  h1_co = blocks.CrossOut(args.embedding)(h1)
+  l1_co = blocks.CrossOut(args.embedding)(l1)
 
   h1f = Add()([h1f,h1_co])
   l1f = Add()([l1f,l1_co])
